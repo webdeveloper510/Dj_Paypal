@@ -111,7 +111,7 @@ def SubmitPayoutRequest(request):
             print(ioe)
 
 
-def CreateTransactions(payout_data):  # Match Transactions rows to the DB table
+def CreateTransactions(payout_data):  # Match Payout rows to the DB table
 
     _, created = transactionsModel.objects.update_or_create(
         payout_item_id=payout_data['payout_item_id'],
