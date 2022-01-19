@@ -13,7 +13,6 @@ from paypalhttp.serializers.json_serializer import Json
 from paypalpayoutssdk.core import PayPalHttpClient, SandboxEnvironment
 from paypalpayoutssdk.payouts import PayoutsGetRequest
 from .models import transactionsModel
-import numpy as np
 
 
 def GetClient(request):
@@ -73,7 +72,7 @@ def GetPayoutBody(request, response, client):
     return response
 
 
-def SubmitPayoutRequest(request):
+def CompletePayoutRequest(request):
 
     client = GetClient(request)
 

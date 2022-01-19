@@ -1,7 +1,7 @@
 
 from django.urls import path
-from .views import SubmitPayoutRequest
+from .views import CompletePayoutRequest
 urlpatterns = [
-    path('', SubmitPayoutRequest, name='payout')
+    path('', CompletePayoutRequest, name='payout')
 
 ]
