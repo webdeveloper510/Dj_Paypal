@@ -30,9 +30,10 @@ def GetClient(request):
 def PayoutBody(request, io_string):
 
     mydict = list()
+
     for data in csv.reader(io_string, delimiter=',', quotechar="|"):
 
-        dict = {"recipient_type": 'EMAIL', "amount": {
+        dict = {"recipient_type": 'EMAIL', "amount": {  # Make a list of dictionary to store the dynamic  variable into the json
             "value": data[2], "currency": "USD"},
             "note": "Thanks for your patronage!",
             "sender_item_id": "201403140001",
@@ -44,7 +45,7 @@ def PayoutBody(request, io_string):
             "sender_batch_id": "15240864949",
             "email_subject": "This email is related to simulation"
         },
-        "items": mydict
+        "items": mydict    # Call List of dictionary
 
 
     }
@@ -54,17 +55,21 @@ def PayoutBody(request, io_string):
 
 def MakePayoutRequest(request, body):
 
-    request = PayoutsPostRequest()
+    request = PayoutsPostRequest()  # Make Payout POSt request
     request.request_body(body)
     return request
 
 
 def GetPayoutBody(request, response, client):
 
+    # Get Payout Batch id from response
     payout_item_id = response.result.batch_header.payout_batch_id
+
+    ###### Make a request from Batch Id ###########
     requestt = PayoutsGetRequest(payout_item_id)
-    payout_response = client.execute(requestt)
-    response = payout_response.result
+
+    payout_response = client.execute(requestt)  # execute request
+    response = payout_response.result  # Payout Response from Payout Batch id
     return response
 
 
