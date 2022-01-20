@@ -19,7 +19,7 @@
         </div>
         {% if messages %}
         {% for message in messages %}
-        <div class="alert-danger alert alert-{{ message.tags }}">
+        <div class="text-danger alert alert-{{ message.tags }}">
             {{ message|safe }}
         </div>
         {% endfor %}
