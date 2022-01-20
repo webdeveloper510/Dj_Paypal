@@ -1,5 +1,4 @@
 from curses.ascii import HT
-import http
 from shlex import quote
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect, redirect
 from django.contrib import messages
@@ -15,7 +14,7 @@ from paypalpayoutssdk.payouts import PayoutsGetRequest
 from .models import transactionsModel
 
 
-def GetClient(request):
+def GetClient():
 
     client_id = settings.PAYPAL_CLIENT_ID
     client_secret = settings.PAYPAL_CLIENT_SECRET
@@ -26,7 +25,7 @@ def GetClient(request):
     return client
 
 
-def PayoutBody(request, io_string):
+def PayoutBody(io_string):
 
     mydict = list()
 
@@ -52,14 +51,14 @@ def PayoutBody(request, io_string):
     return body
 
 
-def MakePayoutRequest(request, body):
+def MakePayoutRequest(body):
 
     request = PayoutsPostRequest()  # Make Payout POSt request
     request.request_body(body)
     return request
 
 
-def GetPayoutBody(request, response, client):
+def GetPayout(response, client):
 
     # Get Payout Batch id from response
     payout_item_id = response.result.batch_header.payout_batch_id
@@ -74,10 +73,10 @@ def GetPayoutBody(request, response, client):
 
 def CompletePayoutRequest(request):
 
-    client = GetClient(request)
+    client = GetClient()
 
     if request.method != 'POST':
-        return render(request, "payment/file.html")
+        return render(request, "Payment/file.html")
     else:
         csv_file = request.FILES['file']
 
@@ -91,21 +90,22 @@ def CompletePayoutRequest(request):
     next(io_string)
     ########### read csv ###############################
 
-    body = PayoutBody(request, io_string)  # call to make the request body
+    body = PayoutBody(io_string)  # call to make the request body
     # call to MakePayout customised function
-    request = MakePayoutRequest(request, body)
+    PayOutRequest = MakePayoutRequest( body)
 
     try:
 
         # Make Api call to get Paypout Batch Id
-        response = client.execute(request)
+        response = client.execute(PayOutRequest)
         # Get Response from   Batch Id
-        PayoutResponse = GetPayoutBody(request, response, client)
+        Payout = GetPayout(response, client)
 
-        for payout_data in PayoutResponse['items']:
+        for payout_data in Payout['items']:
             # Submit Transactions data into the database
             CreateTransactions(payout_data)
-
+            
+        messages.success(request, ("Transaction created"))
         return redirect('/')
     except IOError as ioe:
         print(ioe)
