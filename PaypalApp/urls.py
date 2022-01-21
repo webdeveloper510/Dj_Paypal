@@ -1,7 +1,11 @@
 
 from django.urls import path
-from .views import CompletePayoutRequest
+from django.contrib.auth import views as auth_views
+from . import views
+
+app_name = 'PaypalApp'
+
 urlpatterns = [
-    path('', CompletePayoutRequest, name='payout')
+    path('', views.CompletePayoutRequest, name='payout'),
 
 ]

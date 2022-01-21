@@ -1,6 +1,7 @@
 from curses.ascii import HT
+import email
 from shlex import quote
-from django.shortcuts import render, HttpResponse, HttpResponseRedirect, redirect
+from django.shortcuts import render, HttpResponse, HttpResponseRedirect, redirect, reverse
 from django.contrib import messages
 from paypal.standard.forms import PayPalPaymentsForm
 import csv
@@ -9,9 +10,11 @@ from django.conf import settings
 from paypalpayoutssdk.payouts import PayoutsPostRequest
 from paypalhttp import HttpError
 from paypalhttp.serializers.json_serializer import Json
-from paypalpayoutssdk.core import PayPalHttpClient, SandboxEnvironment
+from paypalpayoutssdk.core import PayPalHttpClient, SandboxEnvironment, LiveEnvironment
 from paypalpayoutssdk.payouts import PayoutsGetRequest
 from .models import transactionsModel
+from django.core import serializers
+import json
 
 
 def GetClient():
@@ -19,13 +22,19 @@ def GetClient():
     client_id = settings.PAYPAL_CLIENT_ID
     client_secret = settings.PAYPAL_CLIENT_SECRET
 
-    environment = SandboxEnvironment(
-        client_id=client_id, client_secret=client_secret)
+    if settings.PAYPAL_TEST:
+        environment = SandboxEnvironment(
+            client_id=client_id, client_secret=client_secret)
+    else:
+        environment = LiveEnvironment(
+            client_id=client_id, client_secret=client_secret)
+
     client = PayPalHttpClient(environment)
+
     return client
 
 
-def PayoutBody(io_string):
+def PayoutBody(request, io_string):
 
     mydict = list()
 
@@ -37,6 +46,7 @@ def PayoutBody(io_string):
             "sender_item_id": "201403140001",
             "receiver": data[0]}
         mydict.append(dict)
+        PayoutReciever = dict['receiver']
     body = {
 
         "sender_batch_header": {
@@ -44,8 +54,6 @@ def PayoutBody(io_string):
             "email_subject": "This email is related to simulation"
         },
         "items": mydict    # Call List of dictionary
-
-
     }
 
     return body
@@ -74,14 +82,26 @@ def GetPayout(response, client):
 def CompletePayoutRequest(request):
 
     client = GetClient()
-
+    PayoutId = list()
     if request.method != 'POST':
-        return render(request, "Payment/file.html")
+        list_id = request.session.get('ids')
+        if len(list_id)==0:
+            allRecords=[]
+        else:
+            allRecords = transactionsModel.objects.filter(id__in=list_id).values()
+        request.session['ids'] = []
+        context = {
+            'allRecords': allRecords
+        }
+        
+        return render(request, "Payment/file.html", context)
     else:
+       
         csv_file = request.FILES['file']
 
     if not csv_file.name.endswith('.csv'):
         messages.error(request, 'This is not a Csv File')
+
         return redirect('/')
 
     ########### read csv ###############################
@@ -90,9 +110,9 @@ def CompletePayoutRequest(request):
     next(io_string)
     ########### read csv ###############################
 
-    body = PayoutBody(io_string)  # call to make the request body
+    body = PayoutBody(request, io_string)  # call to make the request body
     # call to MakePayout customised function
-    PayOutRequest = MakePayoutRequest( body)
+    PayOutRequest = MakePayoutRequest(body)
 
     try:
 
@@ -103,9 +123,11 @@ def CompletePayoutRequest(request):
 
         for payout_data in Payout['items']:
             # Submit Transactions data into the database
-            CreateTransactions(payout_data)
-            
+            id = CreateTransactions(request, payout_data)
+            PayoutId.append(id)
+        request.session['ids'] = PayoutId
         messages.success(request, ("Transaction created"))
+
         return redirect('/')
     except IOError as ioe:
         print(ioe)
@@ -115,9 +137,9 @@ def CompletePayoutRequest(request):
             print(ioe)
 
 
-def CreateTransactions(payout_data):  # Match Payout rows to the DB table
+def CreateTransactions(request, payout_data):  # Match Payout rows to the DB table
 
-    _, created = transactionsModel.objects.update_or_create(
+    created = transactionsModel(
         payout_item_id=payout_data['payout_item_id'],
         # transaction_id=payout_data['transaction_id'],
         transaction_status=payout_data['transaction_status'],
@@ -129,3 +151,6 @@ def CreateTransactions(payout_data):  # Match Payout rows to the DB table
         recipient_wallet=payout_data['payout_item']['recipient_wallet'],
         time_processed=payout_data['time_processed']
     )
+    created.save()
+    id = created.pk
+    return id
