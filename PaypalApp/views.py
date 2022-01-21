@@ -16,7 +16,6 @@ from .models import transactionsModel
 from django.core import serializers
 import json
 import re
-import phonenumbers
 
 
 def GetClient():
@@ -133,7 +132,7 @@ def CompletePayoutRequest(request):
     ########### read csv ###############################
 
     body = PayoutBody(request, io_string)  # call to make the request body
-    
+
     # call to MakePayout customised function
     PayOutRequest = MakePayoutRequest(body)
 
