@@ -147,3 +147,4 @@ PAYPAL_CLIENT_SECRET = 'EE7ZpxMs5YgHUjzX030l4o6gaTbHqBm6S02eDCirLq1QoGiDPkcSEvCa
 PAYPAL_TEST_BASE_URL = 'https://api-m.sandbox.paypal.com/v1'
 PAYPAL_LIVE_URL = 'https://api-m.paypal.com/v1'
 PAYPAL_TOKEN_URL = 'https://api-m.sandbox.paypal.com/v1/oauth2/token'
+

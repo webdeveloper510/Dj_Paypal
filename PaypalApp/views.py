@@ -15,6 +15,8 @@ from paypalpayoutssdk.payouts import PayoutsGetRequest
 from .models import transactionsModel
 from django.core import serializers
 import json
+import re
+import phonenumbers
 
 
 def GetClient():
@@ -37,22 +39,41 @@ def GetClient():
 def PayoutBody(request, io_string):
 
     mydict = list()
+    recipient_type = ''
 
     for data in csv.reader(io_string, delimiter=',', quotechar="|"):
 
-        dict = {"recipient_type": 'EMAIL', "amount": {  # Make a list of dictionary to store the dynamic  variable into the json
-            "value": data[2], "currency": "USD"},
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+
+        if(re.search(regex, data[0])):
+
+            recipient_type = "EMAIL"
+            receiver = data[0]
+        else:
+            recipient_type = "PHONE"
+            receiver = "9988793004"
+
+        dict = {
+            # Make a list of dictionary to store the dynamic  variable into the json
+            "recipient_type": recipient_type, "amount":
+            {
+                "value": data[2],
+                "currency": "USD"
+            },
             "note": "Thanks for your patronage!",
             "sender_item_id": "201403140001",
-            "receiver": data[0]}
+            "receiver": receiver
+        }
+
         mydict.append(dict)
-        PayoutReciever = dict['receiver']
+
     body = {
 
         "sender_batch_header": {
             "sender_batch_id": "15240864949",
             "email_subject": "This email is related to simulation"
         },
+
         "items": mydict    # Call List of dictionary
     }
 
@@ -87,10 +108,11 @@ def CompletePayoutRequest(request):
         list_id = request.session.get('ids')
 
         if list_id is None:
-            allRecords=[]
+            allRecords = []
         else:
-            allRecords = transactionsModel.objects.filter(id__in=list_id).values()
-        
+            allRecords = transactionsModel.objects.filter(
+                id__in=list_id).values()
+
         context = {
             'allRecords': allRecords
         }
@@ -111,6 +133,7 @@ def CompletePayoutRequest(request):
     ########### read csv ###############################
 
     body = PayoutBody(request, io_string)  # call to make the request body
+    
     # call to MakePayout customised function
     PayOutRequest = MakePayoutRequest(body)
 
@@ -138,7 +161,7 @@ def CompletePayoutRequest(request):
 
 
 def CreateTransactions(request, payout_data):  # Match Payout rows to the DB table
-
+    print(payout_data)
     created = transactionsModel(
         payout_item_id=payout_data['payout_item_id'],
         # transaction_id=payout_data['transaction_id'],
@@ -147,10 +170,20 @@ def CreateTransactions(request, payout_data):  # Match Payout rows to the DB tab
         payout_fee=payout_data['payout_item_fee']['value'],
         payout_batch_id=payout_data['payout_batch_id'],
         recieving_amount=payout_data['payout_item']['amount']['value'],
-        reciever_email=payout_data['payout_item']['receiver'],
+        reciever=payout_data['payout_item']['receiver'],
         recipient_wallet=payout_data['payout_item']['recipient_wallet'],
-        time_processed=payout_data['time_processed']
+        time_processed=payout_data['time_processed'],
+        recipient_type=payout_data['payout_item']['recipient_type']
     )
     created.save()
     id = created.pk
     return id
+
+
+def GetPayoutTransactions(request):
+
+    Payouts = transactionsModel.objects.filter().values()
+    context = {
+        "Payoutsdata": Payouts
+    }
+    return render(request, 'Payment/PayoutTransactions.html', context)
