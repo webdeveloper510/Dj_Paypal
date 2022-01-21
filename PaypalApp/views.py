@@ -85,7 +85,8 @@ def CompletePayoutRequest(request):
     PayoutId = list()
     if request.method != 'POST':
         list_id = request.session.get('ids')
-        if len(list_id)==0 or list_id is None:
+
+        if list_id is None:
             allRecords=[]
         else:
             allRecords = transactionsModel.objects.filter(id__in=list_id).values()
