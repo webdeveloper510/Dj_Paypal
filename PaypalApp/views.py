@@ -50,7 +50,9 @@ def PayoutBody(request, io_string):
             receiver = data[0]
         else:
             recipient_type = "PHONE"
-            receiver = "9988793004"
+            receiver = data[0]
+
+        print(recipient_type)
 
         dict = {
             # Make a list of dictionary to store the dynamic  variable into the json
@@ -132,7 +134,7 @@ def CompletePayoutRequest(request):
     ########### read csv ###############################
 
     body = PayoutBody(request, io_string)  # call to make the request body
-
+    print(json.dumps(body))
     # call to MakePayout customised function
     PayOutRequest = MakePayoutRequest(body)
 
