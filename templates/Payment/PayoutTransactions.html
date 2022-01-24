@@ -20,7 +20,19 @@
             <h3>Payout Transactions</h3>
         </div>
         <a class="btn btn-primary" href="{% url 'PaypalApp:payout' %}">Go Back</a>
-        {% if Payoutsdata  %}
+
+        {% if request.session.instance %}
+        {% for message in messages %}
+        <div class="container-fluid p-0 mt-5">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                <button type="button" class="close btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </button>
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% if Payoutsdata %}
         <div class="table-responsive mt-5 mb-5">
             <table class="table table-success">
                 <thead>
@@ -36,12 +48,13 @@
                         <th scope="col">RECIPIENT WALLET</th>
                         <th scope="col">TIME PROCESSED</th>
                         <th scope="col">RECIPIENT TYPE</th>
+                        <th scope="col"> Action </th>
                     </tr>
                 </thead>
                 <tbody>
 
                     {% for data in Payoutsdata %}
-                    <tr>
+                    <tr class="nr">
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>{{data.payout_item_id}}</td>
                         <td>{{data.transaction_id}}</td>
@@ -53,6 +66,10 @@
                         <td>{{data.recipient_wallet}}</td>
                         <td>{{data.time_processed}}</td>
                         <td>{{data.recipient_type}}</td>
+                        <td><button class="btn-close close close_btn" id="endpoint-url-div"
+                                url="{% url 'PaypalApp:DelPayouts' data.id %}" onclick="GetUrl(this)"
+                                data-bs-dismiss="alert" aria-label="Close" type="button" value="{{data.id}}"></button>
+                        </td>
                     </tr>
                     {% endfor %}
 
@@ -61,18 +78,9 @@
             </table>
 
         </div>
-
-        {% else %}
-        {% for message in messages %}
-        <div class="container-fluid p-0 mt-5">
-            <div class="alert {{ message.tags }} alert-dismissible text-center" role="alert">
-                <button type="button" class="close btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </button>
-                {{ message }}
-            </div>
-        </div>
-        {% endfor %}
         {% endif %}
+
+
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
@@ -83,6 +91,15 @@
         $("div.alert").hide();
 
     });
+</script>
+
+<script>
+    function GetUrl(a) {
+        var url = $(a).attr('url')
+        setTimeout(function () {
+            window.location = url
+        }, 0);
+    }
 </script>
 
 </html>

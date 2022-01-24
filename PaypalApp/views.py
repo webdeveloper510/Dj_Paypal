@@ -184,3 +184,14 @@ def GetPayoutTransactions(request):
         messages.error(request, 'No Transactions yet')
 
     return render(request, 'Payment/PayoutTransactions.html', context)
+
+
+def RemovePayout(request, pk):
+    instance = transactionsModel.objects.filter(id=pk).delete()
+    if instance:
+        request.session['instance'] = instance
+        messages.success(request, 'Transactions Deleted successfully')
+    else:
+        request.session['instance'] = ''
+        messages.error(request, 'Some Error occured')
+    return redirect('PaypalApp:GetPayouts')
