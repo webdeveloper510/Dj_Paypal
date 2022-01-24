@@ -171,7 +171,10 @@ def CreateTransactions(request, payout_data):  # Match Payout rows to the DB tab
 
 def GetPayoutTransactions(request):
     Payouts = transactionsModel.objects.filter().values()
+
     context = {
         "Payoutsdata": Payouts
     }
+
+    messages.error(request,'No Transactions yet')
     return render(request, 'Payment/PayoutTransactions.html', context)
