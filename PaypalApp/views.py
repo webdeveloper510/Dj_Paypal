@@ -104,7 +104,7 @@ def CompletePayoutRequest(request):
         context = {
             'allRecords': allRecords
         }
-        request.session['ids'] = []
+        # request.session['ids'] = []
         return render(request, "Payment/file.html", context)
     else:
         csv_file = request.FILES['file']
