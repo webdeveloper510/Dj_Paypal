@@ -175,11 +175,13 @@ def GetPayoutTransactions(request):
     Payouts = transactionsModel.objects.filter().values()
     if Payouts:
         context = {
-            "Payoutsdata": Payouts
+            "Payoutsdata": Payouts,
+            "instance": request.session.get('instance')
         }
     else:
         context = {
-            "Payoutsdata": []
+            "Payoutsdata": [],
+            "instance": []
         }
         messages.error(request, 'No Transactions yet')
 
