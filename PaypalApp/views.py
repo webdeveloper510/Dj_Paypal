@@ -25,10 +25,12 @@ def GetClient():
 
     if settings.PAYPAL_TEST:
         environment = SandboxEnvironment(
-            client_id=client_id, client_secret=client_secret)
+            client_id=client_id, client_secret=client_secret
+        )
     else:
         environment = LiveEnvironment(
-            client_id=client_id, client_secret=client_secret)
+            client_id=client_id, client_secret=client_secret
+        )
 
     client = PayPalHttpClient(environment)
 
@@ -171,10 +173,14 @@ def CreateTransactions(request, payout_data):  # Match Payout rows to the DB tab
 
 def GetPayoutTransactions(request):
     Payouts = transactionsModel.objects.filter().values()
+    if Payouts:
+        context = {
+            "Payoutsdata": Payouts
+        }
+    else:
+        context = {
+            "Payoutsdata": []
+        }
+        messages.error(request, 'No Transactions yet')
 
-    context = {
-        "Payoutsdata": Payouts
-    }
-
-    messages.error(request,'No Transactions yet')
     return render(request, 'Payment/PayoutTransactions.html', context)

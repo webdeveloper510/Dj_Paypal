@@ -19,7 +19,8 @@
         <div class="text-center mt-5">
             <h3>Payout Transactions</h3>
         </div>
-        {% if Payoutsdata %}
+        <a class="btn btn-primary" href="{% url 'PaypalApp:payout' %}">Go Back</a>
+        {% if Payoutsdata  %}
         <div class="table-responsive mt-5 mb-5">
             <table class="table table-success">
                 <thead>
