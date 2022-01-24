@@ -23,7 +23,6 @@
         <div class="container-fluid p-0 mt-5">
             <div class="alert {{ message.tags }} alert-dismissible" role="alert">
                 <button type="button" class="close btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    <!-- <span aria-hidden="True">&times;</span> -->
                 </button>
                 {{ message }}
             </div>
@@ -93,10 +92,10 @@
 </body>
 
 <script>
-    $('.close').click(function(){
+    $('.close').click(function () {
         $("div.alert").hide();
-    
+
     });
-    </script>
+</script>
 
 </html>

@@ -1,7 +1,7 @@
 from curses.ascii import HT
 import email
 from shlex import quote
-from django.shortcuts import render, HttpResponse, HttpResponseRedirect, redirect, reverse
+from django.shortcuts import render, HttpResponse, HttpResponseRedirect, redirect
 from django.contrib import messages
 from paypal.standard.forms import PayPalPaymentsForm
 import csv
@@ -41,40 +41,30 @@ def PayoutBody(request, io_string):
     recipient_type = ''
 
     for data in csv.reader(io_string, delimiter=',', quotechar="|"):
-
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-
         if(re.search(regex, data[0])):
-
             recipient_type = "EMAIL"
             receiver = data[0]
         else:
             recipient_type = "PHONE"
             receiver = data[0]
-
-        print(recipient_type)
-
         dict = {
             # Make a list of dictionary to store the dynamic  variable into the json
             "recipient_type": recipient_type, "amount":
             {
                 "value": data[2],
-                "currency": "USD"
+                "currency": data[1]
             },
             "note": "Thanks for your patronage!",
             "sender_item_id": "201403140001",
             "receiver": receiver
         }
-
         mydict.append(dict)
-
     body = {
-
         "sender_batch_header": {
             "sender_batch_id": "15240864949",
             "email_subject": "This email is related to simulation"
         },
-
         "items": mydict    # Call List of dictionary
     }
 
@@ -82,8 +72,7 @@ def PayoutBody(request, io_string):
 
 
 def MakePayoutRequest(body):
-
-    request = PayoutsPostRequest()  # Make Payout POSt request
+    request = PayoutsPostRequest()  # Make Payout POST request
     request.request_body(body)
     return request
 
@@ -102,18 +91,16 @@ def GetPayout(response, client):
 
 
 def CompletePayoutRequest(request):
-
     client = GetClient()
     PayoutId = list()
+
     if request.method != 'POST':
         list_id = request.session.get('ids')
-
         if list_id is None:
             allRecords = []
         else:
             allRecords = transactionsModel.objects.filter(
                 id__in=list_id).values()
-
         context = {
             'allRecords': allRecords
         }
@@ -121,25 +108,26 @@ def CompletePayoutRequest(request):
         return render(request, "Payment/file.html", context)
     else:
         csv_file = request.FILES['file']
-
     if not csv_file.name.endswith('.csv'):
         messages.error(request, 'This is not a Csv File')
-
         return redirect('/')
 
     ########### read csv ###############################
+
     data_set = csv_file.read().decode('UTF-8')
     io_string = io.StringIO(data_set)
     next(io_string)
+
     ########### read csv ###############################
 
-    body = PayoutBody(request, io_string)  # call to make the request body
-    print(json.dumps(body))
+    body = PayoutBody(request, io_string)
+
+    # call to make the request body
     # call to MakePayout customised function
+
     PayOutRequest = MakePayoutRequest(body)
 
     try:
-
         # Make Api call to get Paypout Batch Id
         response = client.execute(PayOutRequest)
         # Get Response from   Batch Id
@@ -162,7 +150,7 @@ def CompletePayoutRequest(request):
 
 
 def CreateTransactions(request, payout_data):  # Match Payout rows to the DB table
-    print(payout_data)
+
     created = transactionsModel(
         payout_item_id=payout_data['payout_item_id'],
         # transaction_id=payout_data['transaction_id'],
@@ -182,7 +170,6 @@ def CreateTransactions(request, payout_data):  # Match Payout rows to the DB tab
 
 
 def GetPayoutTransactions(request):
-
     Payouts = transactionsModel.objects.filter().values()
     context = {
         "Payoutsdata": Payouts
